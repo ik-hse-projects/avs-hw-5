@@ -19,8 +19,15 @@ pub struct Gallery {
 }
 
 impl Gallery {
+    /// Этот метод возвращает статический экземпляр галлереи,
+    /// запуская поток сторожа при необходимости
     pub fn global() -> &'static Self {
         static mut GALLERY: SyncOnceCell<Gallery> = SyncOnceCell::new();
+        // Изменение статической переменной небезопасно, но:
+        // 1. SyncOnceCell гарантирует, что мы его инициализируем только один раз и полностью.
+        // 2. start_adder устроен таким образом, что он выполнится ровно один раз для каждой,
+        //     галереи причём это обновление соответсвующего флага происходит атомарно.
+        // Поэтому здесь всё корректно и никаких гонок не может возникнуть.
         unsafe {
             let res = GALLERY.get_or_init(Gallery::new);
             GALLERY.get_mut().unwrap().start_adder();
@@ -43,6 +50,7 @@ impl Gallery {
         }
     }
 
+    /// Запускает поток, который будет время от времени добавлять новых гостей в галерею.
     fn start_adder(&'static mut self) {
         if self.thread_started.fetch_or(true, Ordering::SeqCst) {
             return;

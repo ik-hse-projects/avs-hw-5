@@ -1,5 +1,7 @@
 use std::sync::atomic::AtomicUsize;
 
+/// Картина хранит в себе количество гостей, которые на неё смотрят
+/// и её имя для красивого отображения.
 #[derive(Debug)]
 pub struct Painting {
     pub watching: AtomicUsize,

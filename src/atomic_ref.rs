@@ -4,6 +4,7 @@ use std::{
     sync::atomic::{AtomicPtr, Ordering},
 };
 
+/// Это очень простая реализация атомарного Option<&T>
 pub struct AtomicRef<'a, T> {
     ptr: AtomicPtr<T>,
     _phantom: PhantomData<&'a T>,

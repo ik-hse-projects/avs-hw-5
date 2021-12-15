@@ -1,10 +1,16 @@
+//! Watchman — следит за тем, чтобы число активных пользователей не превышало 50.
+//! Для этого он каждые 100мс просмотривает список гостей в галерее,
+//! при необходимости убирая из них неактивных.
+//! Если после этого число гостей всё равно слишком велико, то выбирает случайного гостя
+//! и просит его уйти, отправляя ему SIGTERM.
+
 use std::{sync::atomic::Ordering, time::Duration};
 
 use rand::Rng;
 
 use crate::{gallery::Gallery, tools::send_signal};
 
-const MAX_GUESTS_RUNNING: usize = 20;
+const MAX_GUESTS_RUNNING: usize = 50;
 
 pub fn start_watchman() {
     std::thread::Builder::new()
@@ -45,7 +51,7 @@ pub fn start_watchman() {
                 if !guest.running.load(Ordering::SeqCst) {
                     continue;
                 }
-                let pid = guest.pid.load(Ordering::SeqCst);
+                let &pid = guest.pid.get().unwrap();
                 send_signal(pid, libc::SIGINT);
             }
         })
